@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useParams } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
 import { RequireAuth, RequirePermission, PublicOnlyRoute } from './auth-guards';
 import { LoadingState } from '@/components/feedback/LoadingState';
@@ -7,6 +7,7 @@ import { ErrorBoundary } from './error-boundary';
 
 /* ── Eager-loaded pages ────────────────────────────────────── */
 import { LoginPage } from '@/features/auth/LoginPage';
+import { HomePage } from '@/features/public/HomePage';
 
 /* ── Lazy-loaded feature pages (route-level code splitting) ── */
 const DashboardPage = lazy(() => import('@/features/dashboard/DashboardPage').then((m) => ({ default: m.DashboardPage })));
@@ -28,6 +29,7 @@ const AssessmentReportPage = lazy(() => import('@/features/reports/AssessmentRep
 const UserAdminPage = lazy(() => import('@/features/admin/UserAdminPage').then((m) => ({ default: m.UserAdminPage })));
 const DataSourceHealthPage = lazy(() => import('@/features/admin/DataSourceHealthPage').then((m) => ({ default: m.DataSourceHealthPage })));
 const DeferredFeaturePage = lazy(() => import('@/features/deferred/DeferredFeaturePage').then((m) => ({ default: m.DeferredFeaturePage })));
+const FarmerPortalPage = lazy(() => import('@/features/farmer/FarmerPortalPage').then((m) => ({ default: m.FarmerPortalPage })));
 
 /* ── Lazy-loaded fallback pages ──────────────────────────── */
 const NotFoundPage = lazy(() => import('@/features/deferred/NotFoundPage'));
@@ -47,8 +49,32 @@ function SuspendedPage({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RegisterRedirect() {
+  const { type } = useParams<{ type?: string }>();
+  const role = type === 'farmer' ? 'farmer' : 'officer';
+  return <Navigate to={`/login?mode=register&role=${role}`} replace />;
+}
+
 /* ── Router definition ───────────────────────────────────── */
 export const router = createBrowserRouter([
+  {
+    path: '/register',
+    element: <Navigate to="/login?mode=register" replace />,
+  },
+  {
+    path: '/register/:type',
+    element: <RegisterRedirect />,
+  },
+
+  {
+    path: '/',
+    element: (
+      <PublicOnlyRoute>
+        <HomePage />
+      </PublicOnlyRoute>
+    ),
+  },
+
   /* PUBLIC ROUTES */
   {
     path: '/login',
@@ -61,7 +87,7 @@ export const router = createBrowserRouter([
 
   /* PROTECTED ROUTES — wrapped in AppShell */
   {
-    path: '/',
+    path: '/officer',
     element: (
       <RequireAuth>
         <ErrorBoundary>
@@ -264,6 +290,17 @@ export const router = createBrowserRouter([
         ),
       },
     ],
+  },
+
+  {
+    path: '/farmer',
+    element: (
+      <RequireAuth>
+        <ErrorBoundary>
+          <SuspendedPage><FarmerPortalPage /></SuspendedPage>
+        </ErrorBoundary>
+      </RequireAuth>
+    ),
   },
 
   /* Public 404 fallback */

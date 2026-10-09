@@ -36,7 +36,7 @@ def test_redact_sensitive_data():
         "username": "loan_officer_1",
         "password": "SuperSecretPassword123!",
         "access_token": "eyJhbGciOi...",
-        "api_key": "live_key_987654321",
+        "api_key": "test_token_mask_check_12345",
         "nested": {
             "client_secret": "xyz123",
             "normal_field": "visible_value",

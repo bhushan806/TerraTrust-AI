@@ -1,0 +1,2 @@
+# Gitleaks ignore list for false positives in test fixtures and commit history
+0bac0461997e778dca4d3db58adc1a1f0ca21b74:apps/api/tests/test_logging_middleware.py:generic-api-key:39

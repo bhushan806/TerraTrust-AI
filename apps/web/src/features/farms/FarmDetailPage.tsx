@@ -64,7 +64,7 @@ export const FarmDetailPage: React.FC = () => {
         subtitle={`${farm.location_name} · Operated by ${farm.borrower_name}`}
         breadcrumbs={[
           { label: 'Borrowers', href: '/borrowers' },
-          { label: farm.borrower_name, href: `/borrowers/${farm.borrower_id}` },
+          { label: farm.borrower_name || 'Borrower', href: `/borrowers/${farm.borrower_id}` },
           { label: farm.name, current: true },
         ]}
         badge={<StatusBadge variant="PRODUCTION" size="md" />}

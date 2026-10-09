@@ -60,7 +60,7 @@ export const AppShell: React.FC = () => {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full focus:outline-none"
+          className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto w-full focus:outline-none"
         >
           {/* Interactive Agricultural Credit Decision Pipeline Flow */}
           <WorkflowPipelineBar />

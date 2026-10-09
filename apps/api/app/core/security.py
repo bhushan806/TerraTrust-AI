@@ -31,7 +31,8 @@ def create_access_token(
     subject: str,
     institution_id: str,
     roles: List[str],
-    email: str,
+    email: Optional[str] = None,
+    phone: Optional[str] = None,
     expires_delta: Optional[datetime.timedelta] = None,
     extra_claims: Optional[Dict[str, Any]] = None,
 ) -> str:
@@ -48,10 +49,13 @@ def create_access_token(
         "aud": "fin03-api",
         "iat": int(now.timestamp()),
         "exp": int(expire.timestamp()),
-        "institution_id": str(institution_id),
+        "institution_id": str(institution_id) if institution_id else "",
         "roles": roles,
-        "email": email,
     }
+    if email:
+        payload["email"] = email
+    if phone:
+        payload["phone"] = phone
 
     if extra_claims:
         payload.update(extra_claims)

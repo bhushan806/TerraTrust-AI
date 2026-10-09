@@ -16,6 +16,31 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=6, description="User password")
 
 
+class OfficerRegisterRequest(BaseModel):
+    """Payload to register a new loan officer."""
+
+    full_name: str = Field(..., min_length=2, max_length=255)
+    email: str = Field(..., pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+    password: str = Field(..., min_length=8)
+    institution_id: Optional[uuid.UUID] = None
+    branch_id: Optional[uuid.UUID] = None
+
+
+class FarmerRegisterRequest(BaseModel):
+    """Payload to register a new farmer via phone."""
+
+    display_name: str = Field(..., min_length=2, max_length=255)
+    contact_phone: str = Field(..., min_length=10, max_length=50)
+    password: str = Field(..., min_length=6)
+
+
+class FarmerLoginRequest(BaseModel):
+    """Farmer credentials payload for obtaining an access token."""
+
+    contact_phone: str = Field(..., min_length=10, max_length=50)
+    password: str = Field(..., min_length=6)
+
+
 class UserBranchSummary(BaseModel):
     """Branch scope granted to user."""
 

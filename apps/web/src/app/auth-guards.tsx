@@ -64,7 +64,7 @@ interface PublicOnlyRouteProps {
 export const PublicOnlyRoute: React.FC<PublicOnlyRouteProps> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/officer" replace />;
   }
   return <>{children}</>;
 };

@@ -58,7 +58,7 @@ export const Topbar: React.FC<TopbarProps> = ({
       desc: 'Warna Left Bank canal 4th irrigation cycle confirmed for Plot 143-A (Rameshwar Patil).',
       time: '12m ago',
       type: 'info',
-      link: '/crop-cycles/cycle-301',
+      link: '/officer/crop-cycles/cycle-301',
     },
     {
       id: 'notif-2',
@@ -66,7 +66,7 @@ export const Topbar: React.FC<TopbarProps> = ({
       desc: 'IMD 3-day max temp forecast >41°C. Soil moisture stress risk flagged.',
       time: '1h ago',
       type: 'warning',
-      link: '/crop-cycles/cycle-301/climate',
+      link: '/officer/crop-cycles/cycle-301/climate',
     },
   ];
 
@@ -141,19 +141,21 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
       </div>
 
-      {/* Center Search Shortcut (Aesthetic / Quick Filter) */}
-      <div className="hidden xl:flex items-center max-w-sm w-full mx-4">
+      {/* Center Search Shortcut (Clean Pill-Shaped with Subtle Border) */}
+      <div className="hidden lg:flex items-center max-w-md w-full mx-4">
         <Link
-          to="/borrowers"
-          className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-100/80 hover:bg-slate-100 border border-slate-200/80 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+          to="/officer/borrowers"
+          className="w-full flex items-center justify-between px-4 py-2 rounded-full bg-slate-50/80 hover:bg-white border border-slate-200/90 hover:border-emerald-500/50 hover:shadow-sm text-xs text-slate-500 hover:text-slate-800 transition-all duration-200 group"
         >
-          <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-slate-400" />
-            <span>Search farmers, 7/12 land parcels, assessments...</span>
+          <div className="flex items-center gap-2.5">
+            <Search className="w-4 h-4 text-slate-400 group-hover:text-emerald-600 transition-colors" />
+            <span className="font-normal">Search farmers, 7/12 land parcels, assessments...</span>
           </div>
-          <kbd className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white border border-slate-200 text-slate-500 shadow-2xs">
-            /
-          </kbd>
+          <div className="flex items-center gap-1">
+            <kbd className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white border border-slate-200 text-slate-400 group-hover:border-slate-300 shadow-2xs">
+              ⌘K
+            </kbd>
+          </div>
         </Link>
       </div>
 
@@ -208,7 +210,7 @@ export const Topbar: React.FC<TopbarProps> = ({
 
               <div className="pt-1 text-center border-t border-slate-100">
                 <Link
-                  to="/crop-cycles/cycle-301/climate"
+                  to="/officer/crop-cycles/cycle-301/climate"
                   onClick={() => setShowNotificationDropdown(false)}
                   className="text-[11px] font-bold text-primary-800 hover:underline inline-flex items-center gap-1"
                 >

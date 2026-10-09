@@ -13,9 +13,7 @@ import App from './app/App';
 import './index.css';
 
 async function prepareApp(): Promise<void> {
-  const enableMocks =
-    import.meta.env.VITE_ENABLE_MOCKS !== 'false' &&
-    import.meta.env.MODE !== 'production';
+  const enableMocks = import.meta.env.VITE_ENABLE_MOCKS === 'true';
 
   if (enableMocks) {
     try {

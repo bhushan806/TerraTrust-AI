@@ -1,0 +1,139 @@
+{
+  "dataset_name": "Zenodo CY-Bench (Crop Yield Benchmark)",
+  "source_url": "https://zenodo.org/records/13838912",
+  "retrieved_at_utc": "2026-10-09T15:30:29.885515+00:00",
+  "license_text_reviewed": true,
+  "commercial_use_confirmed": true,
+  "spatial_resolution": "Field parcel / 10m Sentinel-2 aligned",
+  "temporal_resolution": "Annual harvest with daily meteorology aggregation",
+  "audit_checks": {
+    "total_records": 600,
+    "duplicate_records": 2,
+    "missing_values_by_column": {
+      "sample_id": 0,
+      "crop_year": 0,
+      "region_id": 0,
+      "crop_type": 0,
+      "mean_temp_c": 0,
+      "total_precip_mm": 0,
+      "solar_rad_mj": 0,
+      "vpd_kpa": 0,
+      "peak_ndvi": 0,
+      "seasonal_evi": 0,
+      "soil_clay_pct": 0,
+      "soil_soc_g_kg": 0,
+      "soil_ph": 0,
+      "yield_tonnes_per_ha": 0
+    },
+    "unit_boundary_anomalies": [],
+    "crops_represented": [
+      "MAIZE",
+      "SOYBEAN",
+      "SUGARCANE"
+    ],
+    "years_represented": [
+      2016,
+      2017,
+      2018,
+      2019,
+      2020,
+      2021,
+      2022
+    ],
+    "regions_represented": [
+      "IN_AP_GUNTUR",
+      "IN_KA_BELAGAVI",
+      "IN_MH_PUNE",
+      "IN_TN_COIMBATORE"
+    ]
+  },
+  "model_benchmarks": {
+    "maize": {
+      "target_crop": "MAIZE",
+      "evaluation_strategy": "Temporal Holdout Split (Train <= 2020, Test >= 2021)",
+      "features": [
+        "mean_temp_c",
+        "total_precip_mm",
+        "solar_rad_mj",
+        "vpd_kpa",
+        "peak_ndvi",
+        "seasonal_evi",
+        "soil_clay_pct",
+        "soil_soc_g_kg",
+        "soil_ph"
+      ],
+      "models": {
+        "Ridge_Baseline": {
+          "mae_tonnes_per_ha": 0.3806,
+          "rmse_tonnes_per_ha": 0.4446,
+          "r2_score": 0.336,
+          "train_samples": 151,
+          "test_samples": 61
+        },
+        "RandomForest": {
+          "mae_tonnes_per_ha": 0.3326,
+          "rmse_tonnes_per_ha": 0.4112,
+          "r2_score": 0.432,
+          "train_samples": 151,
+          "test_samples": 61
+        },
+        "ExtraTrees": {
+          "mae_tonnes_per_ha": 0.3329,
+          "rmse_tonnes_per_ha": 0.4054,
+          "r2_score": 0.448,
+          "train_samples": 151,
+          "test_samples": 61
+        }
+      }
+    },
+    "sugarcane": {
+      "target_crop": "SUGARCANE",
+      "evaluation_strategy": "Temporal Holdout Split (Train <= 2020, Test >= 2021)",
+      "features": [
+        "mean_temp_c",
+        "total_precip_mm",
+        "solar_rad_mj",
+        "vpd_kpa",
+        "peak_ndvi",
+        "seasonal_evi",
+        "soil_clay_pct",
+        "soil_soc_g_kg",
+        "soil_ph"
+      ],
+      "models": {
+        "Ridge_Baseline": {
+          "mae_tonnes_per_ha": 5.0521,
+          "rmse_tonnes_per_ha": 6.0482,
+          "r2_score": 0.6249,
+          "train_samples": 158,
+          "test_samples": 73
+        },
+        "RandomForest": {
+          "mae_tonnes_per_ha": 4.9856,
+          "rmse_tonnes_per_ha": 6.0917,
+          "r2_score": 0.6195,
+          "train_samples": 158,
+          "test_samples": 73
+        },
+        "ExtraTrees": {
+          "mae_tonnes_per_ha": 5.1659,
+          "rmse_tonnes_per_ha": 6.344,
+          "r2_score": 0.5873,
+          "train_samples": 158,
+          "test_samples": 73
+        }
+      }
+    }
+  },
+  "harmonization_verdict": {
+    "can_concatenate_with_kaggle": false,
+    "justification": "Kaggle dataset uses soil nutrient inputs (N, P, K) with synthetic units and no geo-coordinates. CY-Bench provides multi-spectral remote sensing (Sentinel-2 NDVI/EVI) and meteorological time-series. Blind concatenation introduces feature leakage and target mismatch. Models must remain separate services routed by available telemetry tier.",
+    "recommended_routing": "Tier 1: Kaggle ExtraTrees (Soil NPK). Tier 2: CY-Bench ExtraTrees (Remote Sensing + Climate)."
+  },
+  "limitations": [
+    "Requires verified satellite cloud mask (<15% cloud cover) for Sentinel-2 NDVI calculation.",
+    "Historical yield reporting in smallholder cooperatives has up to 10% self-reporting variance.",
+    "Credit probability of default model is not included in CY-Bench and remains gated."
+  ],
+  "reviewer": "TerraTrust AI Model Governance Committee"
+}

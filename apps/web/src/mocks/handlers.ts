@@ -116,7 +116,7 @@ export const handlers = [
         (b) =>
           b.display_name.toLowerCase().includes(search) ||
           b.external_ref.toLowerCase().includes(search) ||
-          b.phone.includes(search)
+          (b.phone || b.contact_phone || '').includes(search)
       );
     }
 
@@ -129,7 +129,7 @@ export const handlers = [
     }
 
     if (primaryCrop && primaryCrop !== 'ALL') {
-      items = items.filter((b) => b.primary_crop.toLowerCase() === primaryCrop.toLowerCase());
+      items = items.filter((b) => (b.primary_crop || '').toLowerCase() === primaryCrop.toLowerCase());
     }
 
     const total = items.length;

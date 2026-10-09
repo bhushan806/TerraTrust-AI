@@ -228,7 +228,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique user_id identifier"
+        }
+      ]
     },
     "/borrowers": {
       "get": {
@@ -374,7 +385,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "borrower_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique borrower_id identifier"
+        }
+      ]
     },
     "/farms": {
       "get": {
@@ -479,7 +501,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "farm_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique farm_id identifier"
+        }
+      ]
     },
     "/farms/{farm_id}/crop-cycles": {
       "post": {
@@ -522,7 +555,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "farm_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique farm_id identifier"
+        }
+      ]
     },
     "/crop-cycles/{cycle_id}": {
       "get": {
@@ -554,7 +598,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "cycle_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique cycle_id identifier"
+        }
+      ]
     },
     "/loan-applications": {
       "post": {
@@ -629,7 +684,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "application_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique application_id identifier"
+        }
+      ]
     },
     "/loans/{loan_id}/repayment-schedules": {
       "post": {
@@ -672,7 +738,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "loan_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique loan_id identifier"
+        }
+      ]
     },
     "/loans/{loan_id}/repayment-events": {
       "post": {
@@ -715,7 +792,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "loan_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique loan_id identifier"
+        }
+      ]
     },
     "/crop-cycles/{cycle_id}/observations": {
       "get": {
@@ -747,7 +835,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "cycle_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique cycle_id identifier"
+        }
+      ]
     },
     "/data-imports": {
       "post": {
@@ -822,7 +921,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "job_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique job_id identifier"
+        }
+      ]
     },
     "/market-prices": {
       "get": {
@@ -1015,7 +1125,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "assessment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique assessment_id identifier"
+        }
+      ]
     },
     "/assessments/{assessment_id}/scenarios": {
       "post": {
@@ -1088,7 +1209,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "assessment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique assessment_id identifier"
+        }
+      ]
     },
     "/assessments/{assessment_id}/explanations": {
       "get": {
@@ -1120,7 +1252,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "assessment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique assessment_id identifier"
+        }
+      ]
     },
     "/borrowers/{borrower_id}/assessment-history": {
       "get": {
@@ -1152,7 +1295,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "borrower_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique borrower_id identifier"
+        }
+      ]
     },
     "/assessments/{assessment_id}/reports": {
       "post": {
@@ -1195,7 +1349,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "assessment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique assessment_id identifier"
+        }
+      ]
     },
     "/reports/{report_id}": {
       "get": {
@@ -1227,7 +1392,18 @@
             "description": "Internal error"
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "report_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique report_id identifier"
+        }
+      ]
     },
     "/health/ready": {
       "get": {
@@ -1398,7 +1574,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "alert_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique alert_id identifier"
+        }
+      ]
     },
     "/monitoring/rules": {
       "post": {
@@ -1514,7 +1701,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "source_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique source_id identifier"
+        }
+      ]
     },
     "/data-sources": {
       "get": {
@@ -1589,7 +1787,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "model_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique model_id identifier"
+        }
+      ]
     },
     "/models": {
       "get": {
@@ -1696,7 +1905,18 @@
             }
           }
         }
-      }
+      },
+      "parameters": [
+        {
+          "name": "assessment_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Unique assessment_id identifier"
+        }
+      ]
     }
   },
   "components": {

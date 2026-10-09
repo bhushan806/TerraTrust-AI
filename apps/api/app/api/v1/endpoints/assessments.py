@@ -1,12 +1,13 @@
 """AI/ML Inference, Income Calculation, Credit Assessment, Scenarios, and Explanations Endpoints (API-024 to API-031)."""
 
 import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, Header, Request, status
+from fastapi import APIRouter, Depends, Header, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_roles, verify_branch_access
-from app.core.errors import NotFoundException
+from app.core.errors import NotFoundException, ValidationException
 from app.core.logging import request_id_ctx
 from app.core.permissions import (
     ROLE_INSTITUTION_ADMIN,
@@ -18,13 +19,17 @@ from app.models.assessment import CreditAssessment, RiskExplanation, ScenarioRun
 from app.models.borrower import Borrower
 from app.models.crop_cycle import CropCycle
 from app.models.farm import Farm, Plot
+from app.models.loan import LoanApplication
 from app.models.user import User
+from app.repositories.audit_repo import log_audit_event
 from app.schemas.assessment import (
     AssessmentCreateRequest,
     AssessmentHistoryItemResponse,
     AssessmentResponse,
     IncomeEstimateRequest,
     IncomeEstimateResponse,
+    ReviewDecisionRequest,
+    ReviewDecisionResponse,
     RiskExplanationResponse,
     ScenarioRunCreateRequest,
     ScenarioRunResponse,
@@ -141,6 +146,33 @@ def generate_credit_assessment(
         idempotency_key=idempotency_key,
     )
     return response
+
+
+@router.get(
+    "/assessments",
+    response_model=List[AssessmentResponse],
+    operation_id="listCreditAssessments",
+    summary="List Credit Assessments",
+    status_code=status.HTTP_200_OK,
+)
+def list_credit_assessments(
+    limit: int = Query(25, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(
+        require_roles(ROLE_LOAN_OFFICER, ROLE_RISK_ANALYST, ROLE_INSTITUTION_ADMIN)
+    ),
+    db: Session = Depends(get_db),
+) -> List[AssessmentResponse]:
+    """Retrieve list of credit assessments for current institution."""
+    assessments = (
+        db.query(CreditAssessment)
+        .filter(CreditAssessment.institution_id == current_user.institution_id)
+        .order_by(CreditAssessment.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+    return [AssessmentResponse.model_validate(a) for a in assessments]
 
 
 # ---------------------------------------------------------------------------
@@ -327,3 +359,103 @@ def get_borrower_assessment_history(
         .all()
     )
     return [AssessmentHistoryItemResponse.model_validate(a) for a in assessments]
+
+
+# ---------------------------------------------------------------------------
+# API-034: Record Human Review Decision
+# ---------------------------------------------------------------------------
+@router.post(
+    "/assessments/{assessment_id}/review-decision",
+    response_model=ReviewDecisionResponse,
+    operation_id="recordHumanReviewDecision",
+    summary="Record Human Review Decision",
+    status_code=status.HTTP_200_OK,
+)
+def record_human_review_decision(
+    request: Request,
+    assessment_id: uuid.UUID,
+    payload: ReviewDecisionRequest,
+    current_user: User = Depends(
+        require_roles(ROLE_LOAN_OFFICER, ROLE_RISK_ANALYST, ROLE_INSTITUTION_ADMIN)
+    ),
+    db: Session = Depends(get_db),
+) -> ReviewDecisionResponse:
+    """Record formal human review decision for an assessment dossier (API-034)."""
+    assessment = (
+        db.query(CreditAssessment)
+        .filter(
+            CreditAssessment.id == assessment_id,
+            CreditAssessment.institution_id == current_user.institution_id,
+        )
+        .first()
+    )
+    if not assessment:
+        raise NotFoundException(f"CreditAssessment {assessment_id} not found")
+
+    decision_norm = payload.decision.upper()
+    if decision_norm not in {"APPROVED", "CONDITIONALLY_APPROVED", "REJECTED"}:
+        raise ValidationException("Decision must be APPROVED, CONDITIONALLY_APPROVED, or REJECTED")
+
+    now = datetime.now(timezone.utc)
+    decision_id = uuid.uuid4()
+
+    # Link to loan application if present
+    loan_app_id = assessment.loan_id
+    loan_status = None
+    if not loan_app_id and assessment.snapshot_json and "loan_application_id" in assessment.snapshot_json:
+        try:
+            loan_app_id = uuid.UUID(str(assessment.snapshot_json["loan_application_id"]))
+        except Exception:
+            pass
+
+    if loan_app_id:
+        loan_app = db.query(LoanApplication).filter(LoanApplication.id == loan_app_id).first()
+        if loan_app:
+            loan_app.status = decision_norm
+            loan_status = decision_norm
+
+    # Update assessment snapshot metadata
+    snapshot = dict(assessment.snapshot_json or {})
+    snapshot["human_review"] = {
+        "decision_id": str(decision_id),
+        "decision": decision_norm,
+        "decided_by_id": str(current_user.id),
+        "decided_by_name": current_user.full_name or current_user.email,
+        "decided_at": now.isoformat(),
+        "notes": payload.notes,
+        "conditions": payload.conditions or [],
+        "version_reviewed": payload.assessment_version,
+    }
+    assessment.snapshot_json = snapshot
+    assessment.status = "DECIDED"
+    db.commit()
+
+    req_id = getattr(request.state, "request_id", None) or request_id_ctx.get() or "unknown"
+    log_audit_event(
+        db=db,
+        institution_id=current_user.institution_id,
+        action="ASSESSMENT_DECISION_RECORDED",
+        object_type="credit_assessment",
+        object_id=assessment.id,
+        request_id=req_id,
+        actor_id=current_user.id,
+        metadata={
+            "decision": decision_norm,
+            "loan_application_id": str(loan_app_id) if loan_app_id else None,
+            "notes": payload.notes,
+        },
+    )
+
+    return ReviewDecisionResponse(
+        id=decision_id,
+        assessment_id=assessment.id,
+        decision=decision_norm,
+        decision_maker_id=current_user.id,
+        decision_maker_name=current_user.full_name or current_user.email,
+        decided_at=now,
+        notes=payload.notes,
+        conditions=payload.conditions,
+        loan_application_id=loan_app_id,
+        loan_status=loan_status,
+    )
+

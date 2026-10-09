@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertCircle, RotateCcw } from 'lucide-react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { NormalizedApiError } from '@/lib/api-client/client';
 
 interface ErrorStateProps {
@@ -21,37 +21,45 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   const displayMessage =
     message ||
     normError?.message ||
-    (error instanceof Error ? error.message : 'Something went wrong on our side. Please try again.');
+    (error instanceof Error ? error.message : 'The requested agricultural record could not be retrieved.');
   const requestId = normError?.requestId;
 
   return (
-    <div
-      role="alert"
-      className={`rounded-xl border border-red-200 bg-[#FEF3F2] p-6 sm:p-8 text-center flex flex-col items-center justify-center ${className}`}
-    >
-      <div className="w-12 h-12 rounded-full bg-red-100 text-red-700 flex items-center justify-center mb-4">
-        <AlertCircle className="w-6 h-6" aria-hidden="true" />
-      </div>
-
-      <h3 className="text-base sm:text-lg font-bold text-neutral-900 mb-2">{title}</h3>
-      <p className="text-sm text-neutral-700 max-w-lg mb-4 leading-relaxed">{displayMessage}</p>
-
-      {requestId && (
-        <div className="mb-6 px-3 py-1 bg-red-100/60 rounded text-xs text-neutral-600 font-mono">
-          Correlation Reference: <span className="font-semibold text-neutral-800">{requestId}</span>
+    <div className="w-full flex items-center justify-center py-8 px-4">
+      <div
+        role="alert"
+        className={`w-full max-w-md bg-white border border-rose-200/80 rounded-2xl p-6 sm:p-7 shadow-xs text-center flex flex-col items-center justify-center ${className}`}
+      >
+        {/* Soft, Muted Icon Circle */}
+        <div className="w-11 h-11 rounded-full bg-rose-50 border border-rose-100 text-rose-500 flex items-center justify-center mb-3.5 shadow-2xs">
+          <AlertTriangle className="w-5 h-5 stroke-[2.2]" aria-hidden="true" />
         </div>
-      )}
 
-      {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white text-neutral-800 border border-neutral-300 rounded-lg text-sm font-semibold hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-700 focus:ring-offset-2 transition-colors shadow-sm"
-        >
-          <RotateCcw className="w-4 h-4 text-neutral-600" aria-hidden="true" />
-          Retry Request
-        </button>
-      )}
+        {/* Title & Explanatory Text */}
+        <h3 className="text-base font-bold text-slate-900 mb-1.5 font-display">{title}</h3>
+        <p className="text-xs text-slate-500 max-w-sm mb-4 leading-relaxed font-normal">
+          {displayMessage}
+        </p>
+
+        {/* Small, Muted Correlation Reference */}
+        {requestId && (
+          <div className="mb-4 text-[10px] text-slate-400 font-mono tracking-tight">
+            Correlation ID: <span className="text-slate-600 font-medium">{requestId}</span>
+          </div>
+        )}
+
+        {/* Clean, Outlined Retry Button */}
+        {onRetry && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:border-slate-400 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-xs transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2"
+          >
+            <RotateCcw className="w-3.5 h-3.5 text-slate-500" aria-hidden="true" />
+            <span>Retry Request</span>
+          </button>
+        )}
+      </div>
     </div>
   );
 };

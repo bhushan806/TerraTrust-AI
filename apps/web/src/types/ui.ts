@@ -74,7 +74,7 @@ export interface AuthContextState {
   } | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: () => Promise<void>;
+  login: (credential?: string, password?: string, userType?: 'officer' | 'farmer') => Promise<void>;
   logout: () => Promise<void>;
   switchRoleForDemo: (role: UserRole) => void;
 }

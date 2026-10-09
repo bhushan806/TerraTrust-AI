@@ -42,42 +42,53 @@ export type FreshnessState = 'FRESH' | 'AGING' | 'STALE' | 'UNKNOWN' | 'PROVIDER
 export interface Borrower {
   id: string;
   institution_id: string;
-  branch_id: string;
-  branch_name: string;
+  branch_id?: string;
+  branch_name?: string;
   external_ref: string;
   display_name: string;
   legal_name?: string;
-  phone: string;
-  primary_crop: string;
-  region: string;
-  risk_status: RiskStatus;
-  assessment_status: 'PENDING' | 'COMPLETED' | 'EXPIRED' | 'NOT_STARTED';
-  last_assessed_at: string | null;
-  updated_at: string;
-  total_farms: number;
-  total_area_ha: number;
+  phone?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  status?: string;
+  primary_crop?: string;
+  region?: string;
+  risk_status?: RiskStatus;
+  assessment_status?: 'PENDING' | 'COMPLETED' | 'EXPIRED' | 'NOT_STARTED';
+  last_assessed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  total_farms?: number;
+  total_area_ha?: number;
 }
 
 export interface Farm {
   id: string;
   institution_id: string;
   borrower_id: string;
-  borrower_name: string;
+  borrower_name?: string;
   name: string;
-  location_name: string;
-  total_area: number;
-  cultivated_area: number;
-  area_unit: 'ha' | 'acres';
-  soil_type: string;
-  irrigation_type: 'CANAL' | 'TUBEWELL' | 'DRIP' | 'RAINFED' | 'SPRINKLER';
-  coordinates_redacted: boolean;
+  location_name?: string;
+  village?: string;
+  total_area?: number;
+  cultivated_area?: number;
+  area_value?: number;
+  area_unit?: string;
+  soil_type?: string;
+  irrigation_type?: 'CANAL' | 'TUBEWELL' | 'DRIP' | 'RAINFED' | 'SPRINKLER' | string;
+  coordinates_redacted?: boolean;
+  latitude?: number;
+  longitude?: number;
   latitude_approx?: number;
   longitude_approx?: number;
-  state: string;
-  district: string;
-  data_source: string;
-  updated_at: string;
-  freshness_status: FreshnessState;
+  state?: string;
+  district?: string;
+  data_source?: string;
+  status?: string;
+  plots?: any[];
+  created_at?: string;
+  updated_at?: string;
+  freshness_status?: FreshnessState;
 }
 
 export interface CropCycle {

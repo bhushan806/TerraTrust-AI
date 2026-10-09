@@ -2,7 +2,7 @@
 
 import uuid
 from typing import List, Optional
-from sqlalchemy import ForeignKey, Index, String, Uuid
+from sqlalchemy import ForeignKey, Index, String, Uuid, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
 
@@ -25,8 +25,10 @@ class Borrower(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         String(100), nullable=False, doc="Institution-assigned unique customer identifier"
     )
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    contact_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    contact_phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True, unique=True, index=True)
     contact_email: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    hashed_password: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, doc="Password hash for farmer login")
+    phone_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="ACTIVE", nullable=False)
 
     # Relationships

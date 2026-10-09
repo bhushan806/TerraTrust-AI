@@ -9,10 +9,17 @@ from pydantic import BaseModel, ConfigDict, Field
 class LoanApplicationCreate(BaseModel):
     """Payload to submit a new loan application (API-016)."""
 
-    borrower_id: uuid.UUID
+    borrower_id: Optional[uuid.UUID] = None
     amount: float = Field(..., gt=0.0, description="Requested principal amount")
     currency: str = Field(default="INR", max_length=10)
     purpose: str = Field(..., min_length=3, max_length=255)
+
+
+class LoanApplicationStatusUpdate(BaseModel):
+    """Payload to update loan application review status."""
+
+    status: str = Field(..., max_length=50, description="New status (e.g. SUBMITTED, UNDER_REVIEW, APPROVED, REJECTED)")
+    notes: Optional[str] = None
 
 
 class LoanApplicationResponse(BaseModel):
@@ -31,6 +38,8 @@ class LoanApplicationResponse(BaseModel):
     submitted_at: datetime
     created_at: datetime
     updated_at: datetime
+    borrower_name: Optional[str] = None
+    borrower_phone: Optional[str] = None
 
 
 class RepaymentScheduleItemCreate(BaseModel):

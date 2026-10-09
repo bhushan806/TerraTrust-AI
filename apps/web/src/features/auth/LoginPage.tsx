@@ -1,305 +1,495 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/app/providers';
+import { apiClient } from '@/lib/api-client/client';
 import {
   Sprout,
   ShieldCheck,
   Lock,
+  Mail,
+  Eye,
+  EyeOff,
   AlertCircle,
-  RotateCcw,
   Building2,
-  CheckCircle2,
-  Satellite,
-  TrendingUp,
-  Activity,
   ArrowRight,
-  BadgeCheck,
+  Phone,
+  User as UserIcon,
+  CheckCircle2,
+  Check,
 } from 'lucide-react';
-import { initiateOidcLogin } from '@/lib/auth/oidc';
 import { UserRole } from '@/types/domain';
-import { IMAGERY_ASSETS } from '@/lib/assets/imagery';
 
-export const LoginPage: React.FC<LoginPageProps> = () => {
+export const LoginPage: React.FC = () => {
   const { login, switchRoleForDemo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as any)?.from?.pathname || '/';
+  const [searchParams, setSearchParams] = useSearchParams();
+  const from = (location.state as any)?.from?.pathname || '/officer';
 
+  const roleParam = searchParams.get('role');
+  const modeParam = searchParams.get('mode');
+
+  const [authMode, setAuthMode] = useState<'signin' | 'register'>(
+    modeParam === 'register' ? 'register' : 'signin'
+  );
+  const [isFarmer, setIsFarmer] = useState(roleParam === 'farmer');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('officer@fin03.local');
+  const [phone, setPhone] = useState('+91 98220 44129');
+  const [password, setPassword] = useState('password123');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [selectedDemoRole, setSelectedDemoRole] = useState<UserRole>('LOAN_OFFICER');
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  const handleSignIn = async () => {
+  useEffect(() => {
+    if (roleParam === 'farmer') setIsFarmer(true);
+    if (roleParam === 'officer') setIsFarmer(false);
+    if (modeParam === 'register') setAuthMode('register');
+    if (modeParam === 'login') setAuthMode('signin');
+  }, [roleParam, modeParam]);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthError(null);
+    setSuccessMsg(null);
+
+    // Validation
+    if (authMode === 'register' && !name.trim()) {
+      setAuthError('Please enter your full name.');
+      return;
+    }
+    if (isFarmer && (!phone || !password)) {
+      setAuthError('Please provide your phone number and password.');
+      return;
+    }
+    if (!isFarmer && (!email || !password)) {
+      setAuthError('Please provide your email and account password.');
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      setIsLoading(true);
-      setAuthError(null);
-      await initiateOidcLogin();
-      switchRoleForDemo(selectedDemoRole);
-      await login();
-      navigate(from, { replace: true });
+      if (authMode === 'register') {
+        if (isFarmer) {
+          // 1. Register farmer in backend database
+          await apiClient.post('/auth/farmer/register', {
+            display_name: name.trim(),
+            contact_phone: phone.trim(),
+            password: password,
+          });
+          setSuccessMsg('Account created successfully! Logging you in...');
+          // 2. Automatically log in with issued token
+          await login(phone.trim(), password, 'farmer');
+          navigate('/farmer', { replace: true });
+        } else {
+          // Register officer
+          await apiClient.post('/auth/officer/register', {
+            full_name: name.trim(),
+            email: email.trim(),
+            password: password,
+          });
+          setSuccessMsg('Officer account registered successfully! You can now sign in.');
+          setAuthMode('signin');
+        }
+      } else {
+        // Sign in mode
+        await login(isFarmer ? phone.trim() : email.trim(), password, isFarmer ? 'farmer' : 'officer');
+        navigate(isFarmer ? '/farmer' : from, { replace: true });
+      }
     } catch (err: any) {
-      setAuthError(
-        'Unable to complete institutional identity sign-in. The identity provider may be temporarily unavailable or the authorization request expired.'
-      );
+      const errorDetail =
+        err?.response?.data?.error?.message ||
+        err?.message ||
+        'Authentication failed. Please verify credentials.';
+      setAuthError(errorDetail);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleQuickDemoLogin = async (role: UserRole) => {
-    try {
-      setIsLoading(true);
-      setAuthError(null);
-      switchRoleForDemo(role);
-      await login();
-      navigate(from, { replace: true });
-    } catch (err: any) {
-      setAuthError('Error initiating demo session.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleQuickPreset = (presetEmail: string, roleRole: UserRole) => {
+    setIsFarmer(false);
+    setAuthMode('signin');
+    setEmail(presetEmail);
+    setPassword('password123');
+    switchRoleForDemo(roleRole);
+    setAuthError(null);
+    setSuccessMsg(null);
+  };
+
+  const handleFarmerPreset = () => {
+    setIsFarmer(true);
+    setAuthMode('signin');
+    setPhone('+91 98220 44129');
+    setPassword('password123');
+    setAuthError(null);
+    setSuccessMsg(null);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row font-sans selection:bg-primary-900 selection:text-white">
-      {/* Skip Link for Accessibility */}
-      <a
-        href="#login-card"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary-900 focus:text-white focus:rounded-md text-xs font-bold"
-      >
-        Skip to sign-in form
-      </a>
-
-      {/* LEFT COLUMN: Modern Enterprise Sign-In Card */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-between p-6 sm:p-10 lg:p-16">
-        {/* Top Header */}
+    <div className="min-h-screen bg-white flex flex-col lg:flex-row font-sans selection:bg-emerald-500 selection:text-slate-950">
+      {/* ── LEFT SIDE: 50% Clean White Form Container ── */}
+      <div className="w-full lg:w-1/2 min-h-screen bg-white flex flex-col justify-between p-6 sm:p-12 lg:p-16">
+        {/* Top Header: Logo */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-900 to-primary-700 text-white flex items-center justify-center shadow-md">
-              <Sprout className="w-5 h-5 text-emerald-300" aria-hidden="true" />
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-600/20 group-hover:bg-emerald-500 transition-colors">
+              <Sprout className="w-5 h-5 stroke-[2.5]" aria-hidden="true" />
             </div>
-            <div>
-              <div className="text-base font-extrabold text-slate-900 tracking-tight font-display flex items-center gap-1.5">
-                <span>TerraTrust</span>
-                <span className="text-[11px] bg-primary-100 text-primary-900 font-bold px-1.5 py-0.2 rounded-full">
-                  AI
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 font-medium">Agri-Credit & Climate Risk Intelligence</p>
+            <div className="flex flex-col">
+              <span className="text-lg font-black tracking-tight text-slate-900 font-display flex items-center gap-1">
+                TerraTrust <span className="text-emerald-600">AI</span>
+              </span>
+              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                Agricultural Credit Platform
+              </span>
             </div>
-          </div>
+          </Link>
 
-          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-700 shadow-2xs">
-            <Building2 className="w-3.5 h-3.5 text-primary-800" />
-            <span>Apex Rural Credit Bank</span>
+          <div className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 bg-slate-50 border border-slate-200 rounded-full text-xs font-semibold text-slate-600">
+            <Building2 className="w-3.5 h-3.5 text-emerald-700" />
+            <span>Apex Rural Bank</span>
           </div>
         </div>
 
-        {/* Center: Sign-In Card Form */}
-        <div id="login-card" className="my-auto max-w-md w-full mx-auto py-8 space-y-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full text-xs font-semibold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Institutional Single Sign-On (OIDC)</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 font-display tracking-tight">
-              Enterprise Bank Sign In
+        {/* Center: Auth Box */}
+        <div className="my-auto max-w-md w-full mx-auto py-8 space-y-6">
+          <div className="space-y-1.5">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-display tracking-tight">
+              {authMode === 'signin' ? 'Sign In' : 'Create Account'}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-              Agricultural lending and climate-risk intelligence for responsible, data-backed financial decisions.
+            <p className="text-sm text-slate-500 leading-relaxed font-normal">
+              {authMode === 'signin'
+                ? 'Access real-time agronomic telemetry and climate credit risk underwriting.'
+                : isFarmer
+                ? 'Register your agricultural profile for instant credit risk evaluation.'
+                : 'Register institutional officer credentials for credit committee review.'}
             </p>
           </div>
 
-          {/* Error Banner */}
-          {authError && (
-            <div
-              role="alert"
-              className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 space-y-2 animate-fade-in"
+          {/* Mode Switcher Tabs: Sign In vs Create Account */}
+          <div className="flex border-b border-slate-200 pb-1 gap-6 text-sm font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('signin');
+                setAuthError(null);
+                setSuccessMsg(null);
+              }}
+              className={`pb-2 border-b-2 transition-all ${
+                authMode === 'signin'
+                  ? 'border-emerald-600 text-emerald-900'
+                  : 'border-transparent text-slate-400 hover:text-slate-700'
+              }`}
             >
-              <div className="flex items-center gap-2 font-bold text-rose-800">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>Authentication Failure</span>
-              </div>
-              <p>{authError}</p>
-              <button
-                type="button"
-                onClick={handleSignIn}
-                className="inline-flex items-center gap-1.5 font-bold text-rose-800 underline hover:no-underline pt-1"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Retry Sign-In</span>
-              </button>
+              Sign In
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode('register');
+                setAuthError(null);
+                setSuccessMsg(null);
+              }}
+              className={`pb-2 border-b-2 transition-all ${
+                authMode === 'register'
+                  ? 'border-emerald-600 text-emerald-900'
+                  : 'border-transparent text-slate-400 hover:text-slate-700'
+              }`}
+            >
+              Create Account
+            </button>
+          </div>
+
+          {/* Sleek Pill-Shaped Toggle for "Farmer" vs. "Loan Officer" */}
+          <div className="bg-slate-100 p-1 rounded-full flex max-w-sm mx-auto border border-slate-200/80 shadow-inner">
+            <button
+              type="button"
+              onClick={() => {
+                setIsFarmer(false);
+                setAuthError(null);
+                setSuccessMsg(null);
+              }}
+              className={`flex-1 py-2 px-4 rounded-full text-xs font-bold transition-all duration-200 ${
+                !isFarmer
+                  ? 'bg-white text-emerald-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Loan Officer
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsFarmer(true);
+                setAuthError(null);
+                setSuccessMsg(null);
+              }}
+              className={`flex-1 py-2 px-4 rounded-full text-xs font-bold transition-all duration-200 ${
+                isFarmer
+                  ? 'bg-white text-emerald-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              Farmer
+            </button>
+          </div>
+
+          {/* Notifications */}
+          {authError && (
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2.5 animate-in fade-in-50">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">{authError}</p>
             </div>
           )}
 
-          {/* Primary Action Button */}
-          <div className="space-y-4">
+          {successMsg && (
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-start gap-2.5 animate-in fade-in-50">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <p className="leading-relaxed">{successMsg}</p>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Full Name in Register Mode */}
+            {authMode === 'register' && (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Full Name</label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder={isFarmer ? 'e.g. Rameshwar Tukaram Patil' : 'e.g. Rajesh Sharma'}
+                    required
+                    className="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Phone (Farmer) or Email (Officer) */}
+            {isFarmer ? (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">Phone Number</label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98220 44129"
+                    required
+                    className="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700">
+                  Institutional Email
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="officer@fin03.local"
+                    required
+                    className="w-full pl-10 pr-3.5 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700">Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  required
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Solid Emerald Action Button */}
             <button
-              type="button"
-              onClick={handleSignIn}
+              type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2.5 px-4 py-3.5 rounded-xl shadow-md text-sm font-bold text-white bg-gradient-to-r from-primary-900 to-primary-800 hover:from-primary-950 hover:to-primary-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-700 disabled:opacity-50 transition-all duration-200 transform active:scale-[0.99]"
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl shadow-md shadow-emerald-600/25 text-sm font-extrabold text-white bg-emerald-600 hover:bg-emerald-500 focus:outline-none focus:ring-4 focus:ring-emerald-500/20 disabled:opacity-50 transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]"
             >
               {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Authorizing via Banking Federation...</span>
-                </>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  <span>Sign In with Institutional SSO</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  <ShieldCheck className="w-4 h-4 stroke-[2.5]" />
+                  <span>{authMode === 'signin' ? 'Sign In' : 'Register & Continue'}</span>
+                  <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
+          </form>
 
-            {/* Quick Demo Access Switcher */}
-            <div className="p-4 rounded-xl bg-white border border-slate-200/90 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                  Quick Demo Evaluation Roles
-                </span>
-                <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">
-                  Instant Access
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">
-                Switch user permissions to evaluate specific persona workflows:
-              </p>
-
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { role: 'LOAN_OFFICER' as UserRole, label: 'Loan Officer', desc: 'Field & App Review' },
-                  { role: 'RISK_ANALYST' as UserRole, label: 'Risk Analyst', desc: 'Models & Scenarios' },
-                  { role: 'INSTITUTION_ADMIN' as UserRole, label: 'Admin', desc: 'Users & Compliance' },
-                  { role: 'PLATFORM_OPERATOR' as UserRole, label: 'Operator', desc: 'Telemetry & Gateways' },
-                ].map((item) => (
+          {/* Quick Authorized Personas (In Sign In mode) */}
+          {authMode === 'signin' && (
+            <div className="pt-2">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                Quick Authorized Personas
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {!isFarmer ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickPreset('officer@fin03.local', 'LOAN_OFFICER')}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-900 border border-slate-200 transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span>Loan Officer</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickPreset('analyst@fin03.local', 'RISK_ANALYST')}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-900 border border-slate-200 transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      <span>Risk Analyst</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleQuickPreset('admin@fin03.local', 'INSTITUTION_ADMIN')}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-900 border border-slate-200 transition-all active:scale-95 flex items-center gap-1.5"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                      <span>Branch Admin</span>
+                    </button>
+                  </>
+                ) : (
                   <button
-                    key={item.role}
                     type="button"
-                    onClick={() => handleQuickDemoLogin(item.role)}
-                    className="p-2.5 rounded-lg border border-slate-200 bg-slate-50/80 hover:bg-primary-50/50 hover:border-primary-300 text-left transition-colors group"
+                    onClick={handleFarmerPreset}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 hover:text-emerald-900 border border-slate-200 transition-all active:scale-95 flex items-center gap-1.5"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-800 group-hover:text-primary-900">
-                        {item.label}
-                      </span>
-                      <ArrowRight className="w-3 h-3 text-slate-400 group-hover:text-primary-800 group-hover:translate-x-0.5 transition-transform" />
-                    </div>
-                    <span className="text-[10px] text-slate-500 block mt-0.5">{item.desc}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Suresh Patil (Farmer Demo)</span>
                   </button>
-                ))}
+                )}
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Security & Cryptographic Notice */}
-          <div className="p-3.5 rounded-xl bg-slate-100/70 border border-slate-200/80 space-y-2">
-            <div className="flex items-start gap-2.5 text-xs text-slate-600">
-              <Lock className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
-              <p className="leading-relaxed">
-                Passwords and institutional master keys are never collected, stored, or exposed on this application client. Secured by PKCE token binding.
-              </p>
-            </div>
+          {/* Toggle bottom link */}
+          <div className="text-center text-xs text-slate-500 pt-2 border-t border-slate-100">
+            {authMode === 'signin' ? (
+              <>
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('register');
+                    setAuthError(null);
+                    setSuccessMsg(null);
+                  }}
+                  className="text-emerald-700 font-bold hover:underline"
+                >
+                  Create an account here
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('signin');
+                    setAuthError(null);
+                    setSuccessMsg(null);
+                  }}
+                  className="text-emerald-700 font-bold hover:underline"
+                >
+                  Sign in here
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="pt-6 border-t border-slate-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500">
-          <span>TerraTrust-AI v1.0.0 · RBI / NABARD Climate-Risk Prudential Compliant</span>
-          <a
-            href="#help"
-            onClick={(e) => {
-              e.preventDefault();
-              alert('For SSO access issues or role provisioning, contact your Institution IT Security Administrator at sso-support@arcbi.bank');
-            }}
-            className="hover:text-slate-800 underline"
-          >
-            Technical Support
-          </a>
-        </div>
+        {/* Bottom footer text */}
+        <p className="text-[11px] text-slate-400 text-center sm:text-left">
+          &copy; {new Date().getFullYear()} TerraTrust AI · RBI Climate-Risk & Sustainable Lending Compliant
+        </p>
       </div>
 
-      {/* RIGHT COLUMN: Cinematic Agri-Intelligence Visual Showcase */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-900 text-white flex-col justify-between p-12 overflow-hidden">
-        {/* Background Image with Gradient Overlay */}
+      {/* ── RIGHT SIDE: 50% Visual Landscape with Dark Overlay & High-Impact Headline ── */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-slate-950 text-white flex-col justify-between p-12 lg:p-16 overflow-hidden">
+        {/* Background photo */}
         <div className="absolute inset-0 z-0">
           <img
-            src={IMAGERY_ASSETS.satelliteParcel}
-            alt="Agricultural farmland survey aerial"
-            className="w-full h-full object-cover opacity-35 filter saturate-150"
+            src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&q=80&w=2000"
+            alt="Agricultural farmland drone view"
+            className="w-full h-full object-cover scale-105"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent" />
-          <div className="absolute inset-0 bg-radial-gradient from-transparent to-slate-950/90" />
+          {/* Dark gradient overlay from top to bottom */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/75 to-slate-950/40" />
+          <div className="absolute inset-0 bg-emerald-950/20 mix-blend-multiply" />
         </div>
 
-        {/* Top Floating Badge */}
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-white">
-            <Satellite className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Sentinel-2 & ISRO Satellite Telemetry Feed Active</span>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
+        {/* Top badge */}
+        <div className="relative z-10 flex items-center gap-2">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs font-bold text-emerald-300 backdrop-blur-md">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Kharif 2026 Cycle Live</span>
-          </div>
+            <span>Kharif 2026 Telemetry Live</span>
+          </span>
         </div>
 
-        {/* Center Floating Cards Showcase */}
+        {/* Inspiring Headline & Subtitle */}
         <div className="relative z-10 my-auto max-w-lg space-y-4">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-extrabold font-display tracking-tight text-white leading-tight">
-              Evidence-Based Credit for Modern Agriculture
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              Replace subjective appraisal with real-time remote sensing, canal release telemetry, and verified yield risk forecasting.
-            </p>
-          </div>
-
-          {/* Grid of Micro Telemetry Stats */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-emerald-300 font-semibold">
-                <Activity className="w-3.5 h-3.5" />
-                <span>Mean NDVI Vigor</span>
-              </div>
-              <div className="text-2xl font-bold font-tabular text-white">0.742</div>
-              <p className="text-[11px] text-slate-300">+8.4% vs 5-year district normal</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 space-y-1">
-              <div className="flex items-center gap-1.5 text-xs text-blue-300 font-semibold">
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Portfolio Scoped</span>
-              </div>
-              <div className="text-2xl font-bold font-tabular text-white">₹28.4 Cr</div>
-              <p className="text-[11px] text-slate-300">Sangli & Kolhapur Cane Hub</p>
-            </div>
-          </div>
-
-          {/* Testimonial / Compliance Quote */}
-          <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/30 backdrop-blur-md text-xs space-y-2">
-            <div className="flex items-center gap-2 text-emerald-300 font-bold">
-              <BadgeCheck className="w-4 h-4 text-emerald-400" />
-              <span>Zero-Hallucination Policy Enforcement</span>
-            </div>
-            <p className="text-slate-300 leading-relaxed text-[11px]">
-              Every risk score, yield forecast, and credit contribution is strictly classified into Facts, Contributions, and Assumptions with verifiable data provenance.
-            </p>
+          <h2 className="text-3xl sm:text-5xl font-black text-white font-display tracking-tight leading-tight">
+            Climate-Aware Credit Assessment
+          </h2>
+          <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+            Empowering agricultural lenders with Sentinel-2 satellite canopy indexes, NASA root-zone soil moisture telemetry, and validated ML crop yield forecasting.
+          </p>
+          <div className="pt-2 flex flex-wrap gap-2 text-[11px] text-slate-300">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 font-medium">
+              <CheckCircle2 size={12} className="text-emerald-400" />
+              Sentinel-2 NDVI
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 font-medium">
+              <CheckCircle2 size={12} className="text-emerald-400" />
+              NASA SMAP 30cm
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 backdrop-blur-md border border-white/10 font-medium">
+              <CheckCircle2 size={12} className="text-emerald-400" />
+              RBI Compliant
+            </span>
           </div>
         </div>
 
-        {/* Bottom Institutional Seal */}
-        <div className="relative z-10 flex items-center justify-between text-xs text-slate-400 border-t border-white/10 pt-4">
-          <span>Apex Rural Credit Bank of India · Institutional Gateway</span>
-          <span className="font-mono">OAuth2.0 / PKCE 256</span>
+        {/* Bottom subtext */}
+        <div className="relative z-10 text-xs text-slate-400 border-t border-white/10 pt-4 flex items-center justify-between">
+          <span>Apex Rural Development Bank · Maharashtra Division</span>
+          <span className="font-mono text-emerald-400">v2.4 Production</span>
         </div>
       </div>
     </div>
   );
 };
-
-type LoginPageProps = {};
-export default LoginPage;

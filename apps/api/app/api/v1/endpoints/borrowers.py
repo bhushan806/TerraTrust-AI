@@ -42,13 +42,14 @@ def list_borrowers(
 
     if branch_id:
         verify_branch_access(branch_id, current_user)
-        query = query.filter(Borrower.branch_id == branch_id)
+        query = query.filter((Borrower.branch_id == branch_id) | (Borrower.branch_id.is_(None)))
 
     if search:
         search_term = f"%{search}%"
         query = query.filter(
             (Borrower.display_name.ilike(search_term))
             | (Borrower.external_ref.ilike(search_term))
+            | (Borrower.contact_phone.ilike(search_term))
         )
 
     total = query.count()

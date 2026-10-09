@@ -378,3 +378,50 @@ def test_borrower_assessment_history_timeline(seeded_client: TestClient, seeded_
     for item in history:
         assert item["repayment_probability"] is None
         assert item["pd_status"] == "NOT_AVAILABLE"
+
+
+# ---------------------------------------------------------------------------
+# 8. API-034: Human Review Decision Tests
+# ---------------------------------------------------------------------------
+
+def test_record_human_review_decision_lifecycle(seeded_client: TestClient, seeded_db_session: Session):
+    """API-034: Test human review decision recording, state update, and audit trail."""
+    headers = get_auth_headers(seeded_client, "officer@fin03.local")
+    borrower = seeded_db_session.query(Borrower).first()
+    crop_cycle = seeded_db_session.query(CropCycle).first()
+
+    # Create assessment
+    create_res = seeded_client.post(
+        "/api/v1/assessments",
+        json={"borrower_id": str(borrower.id), "crop_cycle_id": str(crop_cycle.id)},
+        headers=headers,
+    )
+    assert create_res.status_code == 201
+    assessment_id = create_res.json()["id"]
+
+    # Submit decision
+    decision_payload = {
+        "decision": "CONDITIONALLY_APPROVED",
+        "notes": "Approved subject to crop insurance verification and drip irrigation inspection.",
+        "conditions": ["Submit active PMFBY crop insurance policy", "Verify borewell yield"],
+        "assessment_version": "1.0",
+    }
+    decision_res = seeded_client.post(
+        f"/api/v1/assessments/{assessment_id}/review-decision",
+        json=decision_payload,
+        headers=headers,
+    )
+    assert decision_res.status_code == 200
+    data = decision_res.json()
+    assert data["decision"] == "CONDITIONALLY_APPROVED"
+    assert data["assessment_id"] == assessment_id
+    assert len(data["conditions"]) == 2
+    assert "PMFBY" in data["conditions"][0]
+
+    # Verify updated assessment
+    get_res = seeded_client.get(f"/api/v1/assessments/{assessment_id}", headers=headers)
+    assert get_res.status_code == 200
+    asm_data = get_res.json()
+    assert asm_data["status"] == "DECIDED"
+    assert asm_data["snapshot_json"]["human_review"]["decision"] == "CONDITIONALLY_APPROVED"
+
