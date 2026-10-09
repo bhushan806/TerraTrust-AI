@@ -11,6 +11,7 @@ from app.api.v1.endpoints import (
     institutions,
     loans,
     observations,
+    reports,
 )
 
 api_v1_router = APIRouter()
@@ -25,4 +26,6 @@ api_v1_router.include_router(loans.router)
 api_v1_router.include_router(observations.router)
 api_v1_router.include_router(imports.router)
 api_v1_router.include_router(assessments.router)
+api_v1_router.include_router(reports.router)
+
 

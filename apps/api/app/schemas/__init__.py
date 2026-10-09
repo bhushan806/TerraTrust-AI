@@ -58,6 +58,11 @@ from app.schemas.observation import (
     SatelliteObservationResponse,
     SoilMoistureResponse,
 )
+from app.schemas.report import (
+    ReportCreateRequest,
+    ReportResponse,
+    ReportSummary,
+)
 
 __all__ = [
     "ErrorBody",
@@ -107,4 +112,7 @@ __all__ = [
     "ScenarioRunResponse",
     "RiskExplanationResponse",
     "AssessmentHistoryItemResponse",
+    "ReportCreateRequest",
+    "ReportResponse",
+    "ReportSummary",
 ]
