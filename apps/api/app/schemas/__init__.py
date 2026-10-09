@@ -38,6 +38,19 @@ from app.schemas.loan import (
     RepaymentScheduleCreate,
     RepaymentScheduleItemResponse,
 )
+from app.schemas.assessment import (
+    AssessmentCreateRequest,
+    AssessmentHistoryItemResponse,
+    AssessmentResponse,
+    IncomeEstimateRequest,
+    IncomeEstimateResponse,
+    PredictionHorizon,
+    RiskExplanationResponse,
+    ScenarioRunCreateRequest,
+    ScenarioRunResponse,
+    YieldInferenceRequest,
+    YieldInferenceResponse,
+)
 from app.schemas.observation import (
     ClimateObservationResponse,
     MarketPriceResponse,
@@ -83,4 +96,15 @@ __all__ = [
     "MarketPriceResponse",
     "DataImportCreate",
     "DataImportResponse",
+    "PredictionHorizon",
+    "YieldInferenceRequest",
+    "YieldInferenceResponse",
+    "IncomeEstimateRequest",
+    "IncomeEstimateResponse",
+    "AssessmentCreateRequest",
+    "AssessmentResponse",
+    "ScenarioRunCreateRequest",
+    "ScenarioRunResponse",
+    "RiskExplanationResponse",
+    "AssessmentHistoryItemResponse",
 ]

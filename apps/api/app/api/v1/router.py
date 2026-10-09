@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter
 from app.api.v1.endpoints import (
+    assessments,
     auth,
     borrowers,
     farms,
@@ -23,3 +24,5 @@ api_v1_router.include_router(farms.router)
 api_v1_router.include_router(loans.router)
 api_v1_router.include_router(observations.router)
 api_v1_router.include_router(imports.router)
+api_v1_router.include_router(assessments.router)
+
