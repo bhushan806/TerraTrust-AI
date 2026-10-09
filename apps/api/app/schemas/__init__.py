@@ -58,6 +58,8 @@ from app.schemas.observation import (
     SatelliteObservationResponse,
     SoilMoistureResponse,
 )
+from app.schemas.alert import AlertResponse, AlertUpdate
+from app.schemas.data_source import DataSourceResponse
 from app.schemas.report import (
     ReportCreateRequest,
     ReportResponse,
@@ -115,4 +117,7 @@ __all__ = [
     "ReportCreateRequest",
     "ReportResponse",
     "ReportSummary",
+    "AlertResponse",
+    "AlertUpdate",
+    "DataSourceResponse",
 ]

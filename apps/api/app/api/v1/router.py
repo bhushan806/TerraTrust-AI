@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     imports,
     institutions,
     loans,
+    monitoring,
     observations,
     reports,
 )
@@ -27,5 +28,7 @@ api_v1_router.include_router(observations.router)
 api_v1_router.include_router(imports.router)
 api_v1_router.include_router(assessments.router)
 api_v1_router.include_router(reports.router)
+api_v1_router.include_router(monitoring.router)
+
 
 
