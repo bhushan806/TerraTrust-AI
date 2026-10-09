@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Yield Inference Response",
+  "type": "object",
+  "required": [
+    "model_name",
+    "model_version",
+    "prediction_timestamp",
+    "prediction_horizon",
+    "target",
+    "value",
+    "unit",
+    "quality_status",
+    "uncertainty",
+    "limitations",
+    "explanation",
+    "input_manifest_id"
+  ],
+  "properties": {
+    "model_name": {
+      "type": "string"
+    },
+    "model_version": {
+      "type": "string"
+    },
+    "prediction_timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "prediction_horizon": {
+      "type": "object"
+    },
+    "target": {
+      "type": "string"
+    },
+    "value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "unit": {
+      "type": "string"
+    },
+    "quality_status": {
+      "enum": [
+        "VALID",
+        "PARTIAL",
+        "STALE",
+        "INVALID",
+        "UNAVAILABLE",
+        "NOT_READY"
+      ]
+    },
+    "uncertainty": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "explanation": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "input_manifest_id": {
+      "type": "string",
+      "format": "uuid"
+    }
+  },
+  "additionalProperties": false
+}

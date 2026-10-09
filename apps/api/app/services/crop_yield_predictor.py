@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import joblib
 import pandas as pd
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # Locate the model file: checks apps/api/models or parent models directory
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -36,6 +36,7 @@ def get_crop_yield_model():
     return _loaded_model
 
 
+
 class YieldInput(BaseModel):
     """Input features matching training dataset."""
     Fertilizer: float = Field(..., ge=0, description="Fertilizer quantity applied (kg/ha or index)", json_schema_extra={"example": 50})
@@ -44,10 +45,31 @@ class YieldInput(BaseModel):
     P: float = Field(..., ge=0, description="Phosphorus content in soil", json_schema_extra={"example": 30})
     K: float = Field(..., ge=0, description="Potassium content in soil", json_schema_extra={"example": 35})
 
+    @model_validator(mode="before")
+    @classmethod
+    def remap_aliases(cls, data):
+        if isinstance(data, dict):
+            mapped = dict(data)
+            if "fertilizer" in mapped and "Fertilizer" not in mapped:
+                mapped["Fertilizer"] = mapped["fertilizer"]
+            if "temperature" in mapped and "temp" not in mapped:
+                mapped["temp"] = mapped["temperature"]
+            if "nitrogen" in mapped and "N" not in mapped:
+                mapped["N"] = mapped["nitrogen"]
+            if "phosphorus" in mapped and "P" not in mapped:
+                mapped["P"] = mapped["phosphorus"]
+            if "potassium" in mapped and "K" not in mapped:
+                mapped["K"] = mapped["potassium"]
+            return mapped
+        return data
+
 
 class YieldOutput(BaseModel):
     """Output prediction conforming to frontend and contract requirements."""
     predicted_yield: float = Field(..., description="Predicted crop yield value")
+    unit: str = Field(default="tonnes_per_hectare", description="Yield unit")
+    model_used: str = Field(default="ExtraTreesRegressor", description="Model architecture identifier")
+    status: str = Field(default="success", description="Inference execution status")
 
 
 def run_yield_prediction(payload: YieldInput) -> float:

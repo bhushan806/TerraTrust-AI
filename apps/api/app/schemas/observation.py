@@ -49,6 +49,11 @@ class ObservationsResponse(BaseModel):
     climate: List[ClimateObservationResponse]
     satellite: List[SatelliteObservationResponse]
     soil_moisture: List[SoilMoistureResponse]
+    weather: Optional[List[ClimateObservationResponse]] = None
+
+    def model_post_init(self, __context) -> None:
+        if self.weather is None:
+            self.weather = self.climate
 
 
 class MarketPriceResponse(BaseModel):

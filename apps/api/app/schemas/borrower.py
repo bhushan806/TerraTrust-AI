@@ -49,3 +49,11 @@ class BorrowerListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    borrowers: Optional[List[BorrowerResponse]] = None
+    totalPages: Optional[int] = None
+
+    def model_post_init(self, __context) -> None:
+        if self.borrowers is None:
+            self.borrowers = self.items
+        if self.totalPages is None:
+            self.totalPages = (self.total + self.limit - 1) // self.limit if self.limit else 1

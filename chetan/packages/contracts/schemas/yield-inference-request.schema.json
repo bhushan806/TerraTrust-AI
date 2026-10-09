@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Yield Inference Request",
+  "type": "object",
+  "required": [
+    "request_id",
+    "crop_cycle_id",
+    "target",
+    "prediction_horizon",
+    "features",
+    "input_manifest_id",
+    "feature_schema_version"
+  ],
+  "properties": {
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "crop_cycle_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "target": {
+      "const": "yield_per_area"
+    },
+    "prediction_horizon": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "format": "date"
+        },
+        "end": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "additionalProperties": false
+    },
+    "features": {
+      "type": "object"
+    },
+    "input_manifest_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "feature_schema_version": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

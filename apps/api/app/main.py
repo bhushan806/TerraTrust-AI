@@ -54,6 +54,7 @@ def create_app() -> FastAPI:
     # ML Crop Yield Prediction Router (TerraTrust Model)
     from app.api.v1.endpoints.predict_yield import router as predict_router
     app.include_router(predict_router)
+    app.include_router(predict_router, prefix="/api/v1")
 
     # Router Mounting
     app.include_router(api_v1_router, prefix="/api/v1")
