@@ -1,0 +1,17 @@
+{
+  "dataset_name": "UNINSPECTED",
+  "source_url": "",
+  "retrieved_at_utc": null,
+  "license_text_reviewed": false,
+  "commercial_use_confirmed": false,
+  "files": [],
+  "columns": [],
+  "target_definition": null,
+  "crop_types": [],
+  "geographic_coverage": null,
+  "historical_period": null,
+  "missingness_report": null,
+  "split_strategy": null,
+  "limitations": [],
+  "reviewer": null
+}
