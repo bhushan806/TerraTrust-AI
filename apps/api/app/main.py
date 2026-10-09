@@ -41,6 +41,7 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
+        allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -50,6 +51,10 @@ def create_app() -> FastAPI:
     # Exception Handlers conforming to error envelope schema
     register_error_handlers(app)
 
+    # ML Crop Yield Prediction Router (TerraTrust Model)
+    from app.api.v1.endpoints.predict_yield import router as predict_router
+    app.include_router(predict_router)
+
     # Router Mounting
     app.include_router(api_v1_router, prefix="/api/v1")
 
@@ -57,6 +62,12 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["Health"], include_in_schema=False)
     def root_health():
         return {"status": "ok", "app": settings.APP_NAME, "version": "1.0.0"}
+
+    # Redirect /docs to /api/v1/docs
+    @app.get("/docs", include_in_schema=False)
+    def docs_redirect():
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url="/api/v1/docs")
 
     return app
 
