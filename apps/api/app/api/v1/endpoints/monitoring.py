@@ -137,8 +137,8 @@ def run_pending_jobs(
 )
 def trigger_reassessment_endpoint(
     assessment_id: uuid.UUID,
+    request: Request,
     reason: str = Query(default="DYNAMIC_MONITORING", description="Reason for dynamic reassessment trigger"),
-    request: Request = None,
     current_user: User = Depends(
         require_roles(ROLE_RISK_ANALYST, ROLE_LOAN_OFFICER, ROLE_INSTITUTION_ADMIN)
     ),

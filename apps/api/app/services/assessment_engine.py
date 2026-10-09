@@ -10,8 +10,8 @@ Strictly enforces:
 import uuid
 from datetime import date, datetime, timezone
 from typing import Any, Dict, Optional, Tuple
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from app.core.errors import NotFoundException
 
 from app.models.assessment import CreditAssessment, RiskExplanation, YieldPrediction
 from app.models.borrower import Borrower
@@ -74,9 +74,8 @@ def create_credit_assessment(
         .first()
     )
     if not borrower:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Borrower {request.borrower_id} not found in current institution scope",
+        raise NotFoundException(
+            f"Borrower {request.borrower_id} not found in current institution scope"
         )
 
     # 3. Crop Cycle Verification: must belong to a plot on borrower's farm
@@ -92,9 +91,8 @@ def create_credit_assessment(
         .first()
     )
     if not crop_cycle:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"CropCycle {request.crop_cycle_id} not found or does not belong to borrower {borrower.id}",
+        raise NotFoundException(
+            f"CropCycle {request.crop_cycle_id} not found or does not belong to borrower {borrower.id}"
         )
 
     # 4. Loan Verification (optional)
@@ -110,9 +108,8 @@ def create_credit_assessment(
             .first()
         )
         if not loan:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Loan {request.loan_id} not found or does not belong to borrower {borrower.id}",
+            raise NotFoundException(
+                f"Loan {request.loan_id} not found or does not belong to borrower {borrower.id}"
             )
 
     # 5. Yield Inference

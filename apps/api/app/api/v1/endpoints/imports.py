@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime, timezone
+from typing import Optional
 from fastapi import APIRouter, Depends, Header, Request, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db, require_roles
@@ -26,7 +27,7 @@ router = APIRouter(prefix="/data-imports", tags=["Data Ingestion & Jobs"])
 def create_data_import(
     payload: DataImportCreate,
     request: Request,
-    idempotency_key: str = Header(None, alias="Idempotency-Key"),
+    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
     current_user: User = Depends(
         require_roles(ROLE_RISK_ANALYST, ROLE_INSTITUTION_ADMIN, ROLE_PLATFORM_OPERATOR)
     ),
